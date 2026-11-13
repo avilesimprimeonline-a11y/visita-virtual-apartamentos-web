@@ -3,4 +3,4 @@
 Este repositorio contiene **solo** la exportación web (Godot 4.7.2, Compatibility/WebGL 2).
 El proyecto fuente no se publica aquí.
 
-Estado actual: **prueba técnica** (geometría ficticia) para validar el alojamiento y la carga progresiva.
+Estado actual: **visita virtual v4** (complejo ADCLEN, 8 apartamentos y piscina). Texturas CC0 de ambientCG.
