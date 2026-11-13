@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Panorámica 360° · Apartamentos turísticos en Perlora</title>
+<style>
+html,body{margin:0;height:100%;background:#111;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
+canvas{display:block;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}
+#info{position:fixed;left:12px;bottom:12px;right:12px;color:#fff;font-size:13px;line-height:1.4;background:rgba(0,0,0,.55);padding:8px 12px;border-radius:6px;max-width:640px}
+#carga{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:15px;background:#111}
+a{color:#cfe3ff}
+</style></head><body>
+<div id="carga">Cargando panorámica…</div>
+<div id="info">Arrastra para mirar alrededor · rueda o pellizco para acercar. <a href="../">Volver</a><br>
+<small>Imagen de estudio. La arquitectura procede del proyecto; el paisaje, la vegetación y el mobiliario son aproximados y decorativos.</small></div>
+<script type="module">
+import * as THREE from './three.module.min.js';
+const r=new THREE.WebGLRenderer({antialias:true});r.setPixelRatio(Math.min(devicePixelRatio,2));r.setSize(innerWidth,innerHeight);r.outputColorSpace=THREE.SRGBColorSpace;document.body.prepend(r.domElement);
+const esc=new THREE.Scene(),cam=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,100);
+const geo=new THREE.SphereGeometry(10,96,64);geo.scale(-1,1,1);
+const q=location.search;const ancho=q.includes('4k')?'panoramica_4k.jpg':(q.includes('8k')?'panoramica_8k.jpg':'panoramica_4k.jpg');
+new THREE.TextureLoader().load(ancho,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=r.capabilities.getMaxAnisotropy();esc.add(new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:t})));document.getElementById('carga').remove();});
+let lon=180,lat=0,arr=false,x0=0,y0=0,lon0=0,lat0=0,toques=new Map(),d0=0,f0=75;
+const el=r.domElement;
+el.addEventListener('pointerdown',e=>{toques.set(e.pointerId,e);if(toques.size===1){arr=true;x0=e.clientX;y0=e.clientY;lon0=lon;lat0=lat}else if(toques.size===2){const [a,b]=[...toques.values()];d0=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);f0=cam.fov}});
+el.addEventListener('pointermove',e=>{if(!toques.has(e.pointerId))return;toques.set(e.pointerId,e);if(toques.size===2){const [a,b]=[...toques.values()];const d=Math.hypot(a.clientX-b.clientX,a.clientY-b.clientY);cam.fov=Math.min(90,Math.max(30,f0*d0/d));cam.updateProjectionMatrix();return}if(arr){const k=cam.fov/innerHeight;lon=lon0-(e.clientX-x0)*k;lat=Math.max(-85,Math.min(85,lat0+(e.clientY-y0)*k))}});
+const fin=e=>{toques.delete(e.pointerId);if(toques.size===0)arr=false};el.addEventListener('pointerup',fin);el.addEventListener('pointercancel',fin);
+el.addEventListener('wheel',e=>{e.preventDefault();cam.fov=Math.min(90,Math.max(30,cam.fov+e.deltaY*0.04));cam.updateProjectionMatrix()},{passive:false});
+addEventListener('resize',()=>{cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix();r.setSize(innerWidth,innerHeight)});
+(function bucle(){requestAnimationFrame(bucle);const p=THREE.MathUtils.degToRad(90-lat),t=THREE.MathUtils.degToRad(lon);cam.lookAt(Math.sin(p)*Math.cos(t),Math.cos(p),Math.sin(p)*Math.sin(t));r.render(esc,cam)})();
+</script></body></html>
